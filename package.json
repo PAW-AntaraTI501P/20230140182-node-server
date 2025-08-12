@@ -11,8 +11,12 @@
   "license": "ISC",
   "description": "> this project was created for TI501P Pengembangan Aplikasi Web",
   "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.1",
     "ejs": "^3.1.10",
     "express": "^5.1.0",
+    "method-override": "^3.0.0",
+    "mysql2": "^3.14.3",
     "nodemon": "^3.1.10"
   }
 }
