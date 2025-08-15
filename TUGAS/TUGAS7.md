@@ -1,11 +1,11 @@
-## Halaman Tampilan Tugas (Todo View)
+## Tampilan browser halaman todo-view
 ![Tampilan Todo View](../SCREENSHOT/todo-view.png)
 ---
-## Halaman Daftar Tugas (Todo Array)
+## Tampilan browser halaman Todo Array
 ![Tampilan Daftar Tugas dari Array](../SCREENSHOT/todo-array.png)
 ---
-## Halaman Utama (Index)
+## Tampilan browser halaman Index
 ![Tampilan Halaman Utama](../SCREENSHOT/index-layout.png)
 ---
-## Halaman Kontak
+## Tampilan browser halaman Contact
 ![Tampilan Halaman Kontak](../SCREENSHOT/contact-layout.png)
