@@ -2,33 +2,45 @@ require("dotenv").config();
 const express = require("express");
 const app = express();
 const db = require("./database/db.js")
-
 const todoRoutes = require("./routes/tododb.js");
 const { todos } = require("./routes/todo.js");
 const port = process.env.PORT;
+const expressLayouts = require("express-ejs-layouts");
 const methodOverride = require('method-override');
+
+app.set("view engine", "ejs");
+app.use(expressLayouts);
+app.set('layout', 'main-layout'); 
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(methodOverride('_method'));
 app.use("/todos", todoRoutes);
 
-app.set("view engine", "ejs"); //utk ke halaman ejs
-
 app.get("/", (req, res) => {
-  res.render("index"); //render file ke index.ejs
+  res.render("index", {
+    layout: "layouts/main-layout",
+  }); //render file ke index.ejs
+  
 });
 
 app.get("/contact", (req, res) => {
-  res.render("contact"); //render ke file contact.ejs
+  res.render("contact", {
+    layout: "layouts/main-layout",
+  }); //render ke file contact.ejs
 });
 
 app.get("/todos-data", (req, res) => {
   res.json(todos);
 });
+
 app.get("/todos-list", (req, res) => {
-  res.render("todos-page", { todos: todos });
+  res.render("todos-page", {
+    layout: "layouts/main-layout",
+    todos: todos,
+  });
 });
+
 app.post("/todos-list/add", (req, res) => {
   const { task } = req.body;
   if (!task || task.trim() === "") {
@@ -72,12 +84,13 @@ app.delete("/todos-list/delete/:id", (req, res) => {
   res.redirect("/todos-list");
 });
 
-app.get("/todo-view", (req,res) =>{
-  db.query("SELECT * from todos", (err, todos) =>{
-    if(err) return res.status(500).send("Internal Server Error")
-      res.render("todo", {
-        todos: todos,
-      });
+app.get("/todo-view", (req, res) => {
+  db.query("SELECT * from todos", (err, todos) => {
+    if (err) return res.status(500).send("Internal Server Error");
+    res.render("todo", {
+      layout: "layouts/main-layout",
+      todos: todos,
+    });
   });
 });
 
