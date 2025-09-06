@@ -1,26 +1,27 @@
 require("dotenv").config();
 const express = require("express");
 const app = express();
-const db = require("./database/db.js");
+const db = require("./database/db.js")
 const todoRoutes = require("./routes/tododb.js");
 const { todos } = require("./routes/todo.js");
 const port = process.env.PORT;
-const methodOverride = require("method-override");
-const expressLayout = require("express-ejs-layouts");
-app.use(expressLayout);
+const expressLayouts = require("express-ejs-layouts");
+const methodOverride = require('method-override');
+
+app.set("view engine", "ejs");
+app.use(expressLayouts);
+app.set('layout', 'main-layout'); 
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(methodOverride("_method"));
+app.use(methodOverride('_method'));
 app.use("/todos", todoRoutes);
-app.use(express.static('public'));
-
-app.set("view engine", "ejs"); //utk ke halaman ejs
 
 app.get("/", (req, res) => {
   res.render("index", {
     layout: "layouts/main-layout",
   }); //render file ke index.ejs
+  
 });
 
 app.get("/contact", (req, res) => {
@@ -32,9 +33,14 @@ app.get("/contact", (req, res) => {
 app.get("/todos-data", (req, res) => {
   res.json(todos);
 });
+
 app.get("/todos-list", (req, res) => {
-  res.render("todos-page", { todos: todos, layout: "layouts/main-layout" });
+  res.render("todos-page", {
+    layout: "layouts/main-layout",
+    todos: todos,
+  });
 });
+
 app.post("/todos-list/add", (req, res) => {
   const { task } = req.body;
   if (!task || task.trim() === "") {
@@ -43,7 +49,7 @@ app.post("/todos-list/add", (req, res) => {
 
   const newTodo = {
     id: todos.length > 0 ? todos[todos.length - 1].id + 1 : 1,
-    task: task.trim(),
+    task: task.trim()
   };
   todos.push(newTodo);
 
@@ -53,7 +59,7 @@ app.post("/todos-list/add", (req, res) => {
 app.put("/todos-list/edit/:id", (req, res) => {
   const id = parseInt(req.params.id);
   const { task } = req.body;
-  const todo = todos.find((t) => t.id === id);
+  const todo = todos.find(t => t.id === id);
 
   if (!todo) {
     return res.status(404).send("Tugas tidak ditemukan");
@@ -66,32 +72,26 @@ app.put("/todos-list/edit/:id", (req, res) => {
   res.redirect("/todos-list");
 });
 
-app.delete("/todos-list/delete/:id", (req, res) => {
-  const id = parseInt(req.params.id);
-  const index = todos.findIndex((t) => t.id === id);
 
-  if (index === -1) {
-    return res.status(404).send("Tugas tidak ditemukan");
-  }
 
-  todos.splice(index, 1);
-  res.redirect("/todos-list");
-});
-
-app.get("/todo-view", (req, res) => {
-  db.query("SELECT * from todos", (err, todos) => {
-    if (err) return res.status(500).send("Internal Server Error");
-    res.render("todo", {
-      todos: todos,
-      layout: "layouts/main-layout",
-    });
-  });
-});
+//iniii tambahh (Prak10)
 
 // GET: Mengambil semua todos
 app.get("/api/todos", (req, res) => {
-  console.log("Menerima permintaan GET untuk todos.");
-  db.query("SELECT * FROM todos", (err, todos) => {
+  const { search } = req.query;
+  console.log(
+    `Menerima permintaan GET untuk todos. Kriteria pencarian: '${search}'`
+  );
+
+  let query = "SELECT * FROM todos";
+  const params = [];
+
+  if (search) {
+    query += " WHERE task LIKE ?";
+    params.push(`%${search}%`);
+  }
+
+  db.query(query, params, (err, todos) => {
     if (err) {
       console.error("Database query error:", err);
       return res.status(500).json({ error: "Internal Server Error" });
@@ -154,31 +154,6 @@ app.put("/api/todos/:id", (req, res) => {
     });
 });
 
-// PUT: Memperbarui task
-app.put("/api/todos/update-task/:id", (req, res) => {
-  const { id } = req.params;
-  const { task } = req.body;
-  console.log(`Menerima permintaan PUT untuk ID: ${id} dengan task baru: ${task}`);
-
-  if (!task) {
-      return res.status(400).json({ error: "Task tidak boleh kosong" });
-  }
-
-  const query = 'UPDATE todos SET task = ? WHERE id = ?';
-
-  db.query(query, [task, id], (err, result) => {
-      if (err) {
-          console.error("Database update error:", err);
-          return res.status(500).json({ error: "Internal Server Error" });
-      }
-      if (result.affectedRows === 0) {
-          return res.status(404).json({ error: 'Todo not found' });
-      }
-      console.log(`Todo dengan ID ${id} berhasil diperbarui.`);
-      res.json({ message: 'Todo task updated successfully', task: task });
-  });
-});
-
 // DELETE: Menghapus todo berdasarkan ID
 app.delete("/api/todos/:id", (req, res) => {
     const { id } = req.params;
@@ -196,6 +171,34 @@ app.delete("/api/todos/:id", (req, res) => {
         console.log(`Todo dengan ID ${id} berhasil dihapus.`);
         res.json({ message: 'Todo deleted successfully' });
     });
+});
+
+
+
+
+
+
+//midleware
+app.delete("/todos-list/delete/:id", (req, res) => {
+  const id = parseInt(req.params.id);
+  const index = todos.findIndex(t => t.id === id);
+
+  if (index === -1) {
+    return res.status(404).send("Tugas tidak ditemukan");
+  }
+
+  todos.splice(index, 1);
+  res.redirect("/todos-list");
+});
+
+app.get("/todo-view", (req, res) => {
+  db.query("SELECT * from todos", (err, todos) => {
+    if (err) return res.status(500).send("Internal Server Error");
+    res.render("todo", {
+      layout: "layouts/main-layout",
+      todos: todos,
+    });
+  });
 });
 
 app.use((req, res) => {
